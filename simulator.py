@@ -24,7 +24,6 @@ the assumed default value if missing listed first:
   'position'       : True
   'values'         : 'up-other', 'up-side-down', 'up-4-down', 'up-360-down'
   'hidden-visible' : False, return list, distinguishing dice even if value not visible
-  'return-roll'    : False, return simulator structure list
 
 return structure is a dict, with some subset of the following fields:
   'rolls'       : list of simulator structures
@@ -73,10 +72,10 @@ def simulate(model=lambda structure: 1, options=dict(), maxrerolls=100, n=1000):
         for _ in range(maxrerolls):
             for i in value:
                 diceroll[i] = roll(angle=angle)
-            position = [(random.randint(0,200), random.randint(0,200)) for _ in range(6)]
-            modelinput = [{'direction': diceroll[i], 'position': position[i]} for i in range(6)]
+            modelinput = [{'direction': diceroll[i], 'position': (random.randint(0,200), random.randint(0,200))}
+                          for i in range(6)]
             if not position:
-                del(modelinput['position'])
+                modelinput['position'] = None
             if values == 'up-other':
                 for i in range(6):
                     if modelinput[i]['direction'] != 'up':
@@ -89,6 +88,9 @@ def simulate(model=lambda structure: 1, options=dict(), maxrerolls=100, n=1000):
                 modelinput[i]['value'] = i+1
                 modelinput[i] = ModelInput(**modelinput[i])
             if hidden_visible:
+                for i in range(6):
+                    if modelinput[i]['direction'] == 'down':
+                        modelinput[i]['value'] = 0
                 modelinput = set(modelinput)
             value = model(modelinput)
             if type(value) is not list:
